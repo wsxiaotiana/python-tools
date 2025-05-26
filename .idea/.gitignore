@@ -1,0 +1,9 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+
+# IntelliJ IDEA / PyCharm specific files and directories
+.idea/
+
+# IntelliJ IDEA / PyCharm module files
+*.iml
