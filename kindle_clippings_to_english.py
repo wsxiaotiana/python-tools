@@ -1,8 +1,8 @@
 import re
 from datetime import datetime
 
-DEFAULT_INPUT_FILE_PATH = "C:\\Users\\yanxiaotian\\Desktop\\My Clippings1.txt"
-DEFAULT_OUTPUT_FILE_PATH = "C:\\Users\\yanxiaotian\\Desktop\\My Clippings1_english.txt"
+DEFAULT_INPUT_FILE_PATH = "C:\\Users\\yanxiaotian\\Desktop\\My Clippings.txt"
+DEFAULT_OUTPUT_FILE_PATH = "C:\\Users\\yanxiaotian\\Desktop\\My Clippings_english.txt"
 
 def convert_chinese_clippings_to_english(input_file_path=DEFAULT_INPUT_FILE_PATH, output_file_path=DEFAULT_OUTPUT_FILE_PATH):
     try:
