@@ -108,7 +108,7 @@ def restore_file_timestamps(vault_path):
 # Windows示例: "C:\\Users\\YourUser\\Documents\\ObsidianVault"
 # macOS/Linux示例: "/Users/YourUser/Documents/ObsidianVault"
 
-VAULT_DIRECTORY = "D:\\my documents\\obsidian\\obsidian-note" # 注意：在Python中，建议使用双反斜杠'\\'或正斜杠'/'作为路径分隔符
+VAULT_DIRECTORY = "E:\\yxt\\obsidian\\obsidian-note" # 注意：在Python中，建议使用双反斜杠'\\'或正斜杠'/'作为路径分隔符
 
 # --- 运行脚本 ---
 if __name__ == '__main__':

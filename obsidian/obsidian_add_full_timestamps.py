@@ -88,29 +88,29 @@ def add_datetime_attributes(vault_path):
                                 made_changes = True
                                 added_attributes.append('created_time')
 
-                    # --- 2. 处理 modified_time (类似逻辑) ---
-                    if 'modified_time' not in post.metadata:
-                        source_date_val = post.metadata.get('last')
-                        if source_date_val:
-                            # 确定日期部分
-                            if isinstance(source_date_val, datetime.datetime):
-                                date_part = source_date_val.date()
-                            elif isinstance(source_date_val, datetime.date):
-                                date_part = source_date_val
-                            else:
-                                parsed_dt = parse_flexible_date(source_date_val)
-                                date_part = parsed_dt.date() if parsed_dt else None
-
-                            if date_part:
-                                # 确定时间部分 (来自文件系统)
-                                modification_timestamp = file_stat.st_mtime
-                                time_part = datetime.datetime.fromtimestamp(modification_timestamp).time()
-
-                                # 组合并赋值
-                                full_datetime = datetime.datetime.combine(date_part, time_part)
-                                post.metadata['modified_time'] = full_datetime.isoformat(timespec='seconds')
-                                made_changes = True
-                                added_attributes.append('modified_time')
+                    # # --- 2. 处理 modified_time (类似逻辑) ---
+                    # if 'modified_time' not in post.metadata:
+                    #     source_date_val = post.metadata.get('last')
+                    #     if source_date_val:
+                    #         # 确定日期部分
+                    #         if isinstance(source_date_val, datetime.datetime):
+                    #             date_part = source_date_val.date()
+                    #         elif isinstance(source_date_val, datetime.date):
+                    #             date_part = source_date_val
+                    #         else:
+                    #             parsed_dt = parse_flexible_date(source_date_val)
+                    #             date_part = parsed_dt.date() if parsed_dt else None
+                    #
+                    #         if date_part:
+                    #             # 确定时间部分 (来自文件系统)
+                    #             modification_timestamp = file_stat.st_mtime
+                    #             time_part = datetime.datetime.fromtimestamp(modification_timestamp).time()
+                    #
+                    #             # 组合并赋值
+                    #             full_datetime = datetime.datetime.combine(date_part, time_part)
+                    #             post.metadata['modified_time'] = full_datetime.isoformat(timespec='seconds')
+                    #             made_changes = True
+                    #             added_attributes.append('modified_time')
 
                     # --- 3. 统一保存 ---
                     if made_changes:
