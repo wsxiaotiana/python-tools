@@ -33,12 +33,13 @@ def parse_flexible_date(date_string):
     return None
 
 
-def fix_quoted_timestamps(vault_path):
+def fix_date_format_in_vault(vault_path):
     """
-    遍历Obsidian库，将 'modified_time' 属性中带引号的字符串值
-    转换为不带引号的 datetime 对象。
+    遍历 Obsidian 库，查找指定属性，并将其值统一格式化为
+    'YYYY-MM-DD HH:MM:SS' 格式的字符串。
+    此版本能处理值为字符串或已为 date/datetime 对象的情况。
     """
-    print(f"开始扫描并修正带引号的时间戳: {vault_path}\n")
+    print(f"开始扫描并修正日期格式: {vault_path}\n")
     updated_files_count = 0
     scanned_files_count = 0
 
@@ -52,36 +53,54 @@ def fix_quoted_timestamps(vault_path):
                 scanned_files_count += 1
 
                 try:
-                    post = frontmatter.load(file_path)
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        post = frontmatter.load(f)
+
                     made_changes = False
                     corrected_attributes = []
-                    attributes_to_check = ['created_time', 'modified_time']  # <--- 定义要检查的属性列表
+                    attributes_to_check = ['created_time', 'last']
 
-                    # 循环检查列表中的每个属性
                     for attr in attributes_to_check:
-                        value = post.metadata.get(attr)
+                        original_value = post.metadata.get(attr)
 
-                        # 只处理那些值是字符串的情况
-                        if value and isinstance(value, str):
-                            # 跳过 Templater 动态命令
-                            if '<%' in value:
-                                continue
+                        if not original_value:
+                            continue
 
-                            # 尝试将字符串解析为 datetime 对象
-                            parsed_datetime = parse_flexible_date(value)
+                        # 跳过 Templater 动态命令
+                        if isinstance(original_value, str) and '<%' in original_value:
+                            continue
 
-                            if parsed_datetime:
-                                # 使用 datetime 对象替换原来的字符串
-                                post.metadata[attr] = parsed_datetime
+                        parsed_datetime = None
+                        # 【核心修正】扩展逻辑以处理多种类型
+                        # 情况1: 值是一个字符串，需要解析
+                        if isinstance(original_value, str):
+                            parsed_datetime = parse_flexible_date(original_value)
+                        # 情况2: 值已是 date 或 datetime 对象 (由 frontmatter 自动解析)
+                        elif isinstance(original_value, (datetime.datetime, datetime.date)):
+                            parsed_datetime = original_value
+
+                        # 如果成功获取了 datetime 对象，则进行格式化和检查
+                        if parsed_datetime:
+                            target_format_string = parsed_datetime.strftime('%Y-%m-%d %H:%M:%S')
+
+                            # 检查是否需要更新：
+                            # 1. 如果原始值不是字符串 (说明是date/datetime对象，需要转成字符串)
+                            # 2. 或者原始值是字符串，但格式不正确
+                            is_already_correct_string = isinstance(original_value,
+                                                                   str) and original_value == target_format_string
+
+                            if not is_already_correct_string:
+                                post.metadata[attr] = target_format_string
                                 made_changes = True
                                 corrected_attributes.append(attr)
-                            else:
-                                print(f"🟡  警告: 无法解析 '{attr}' 的值 '{value}' 在文件: {file_path}")
 
-                    # 仅在实际修正了格式后才保存文件
+                        # 仅当原始值是字符串且无法解析时才警告
+                        elif isinstance(original_value, str):
+                            print(f"🟡  警告: 无法解析 '{attr}' 的值 '{original_value}' 在文件: {file_path}")
+
                     if made_changes:
-                        with open(file_path, 'wb') as f:
-                            frontmatter.dump(post, f)
+                        with open(file_path, 'w', encoding='utf-8') as f:
+                            f.write(frontmatter.dumps(post))
 
                         print(f"✅  已修正格式: {file_path} (字段: {', '.join(corrected_attributes)})")
                         updated_files_count += 1
@@ -97,11 +116,11 @@ def fix_quoted_timestamps(vault_path):
 
 
 # --- 配置您的Obsidian库路径 ---
-VAULT_DIRECTORY = "E:\yxt\obsidian\obsidian-note"
+VAULT_DIRECTORY = "E:\\yxt\\obsidian\\obsidian-note"  # Windows路径建议使用双反斜杠或原始字符串
 
 # --- 运行脚本 ---
 if __name__ == '__main__':
     if VAULT_DIRECTORY == "请在这里输入您的Obsidian库的绝对路径":
         print("❌ 错误：请先在脚本中设置您的 'VAULT_DIRECTORY' 变量！")
     else:
-        fix_quoted_timestamps(VAULT_DIRECTORY)
+        fix_date_format_in_vault(VAULT_DIRECTORY)
