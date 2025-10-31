@@ -97,7 +97,7 @@ def restore_file_timestamps(vault_path):
 
 
 # --- 配置您的Obsidian库路径 ---
-VAULT_DIRECTORY = "D:\\my documents\\obsidian\\obsidian-note"
+VAULT_DIRECTORY = "E:\yxt\obsidian\obsidian-note"
 
 # --- 运行脚本 ---
 if __name__ == '__main__':

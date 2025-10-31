@@ -51,7 +51,7 @@ def fix_date_format_in_vault(vault_path):
                     post = frontmatter.load(file_path)
                     made_changes = False
                     corrected_attributes = []
-                    attributes_to_check = ['created', 'last']
+                    attributes_to_check = ['created_time', 'last']
 
                     for attr in attributes_to_check:
                         if post.metadata.get(attr) and not isinstance(post.metadata.get(attr), datetime.date):
