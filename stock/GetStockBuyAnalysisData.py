@@ -17,45 +17,114 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from datetime import datetime
 import argparse
+from pathlib import Path
+import os
 
 # ===== 可改参数 =====
 CODES = [
-    "002028.SZ",  # 思源电气
-    "002335.SZ",  # 科华数据
-    "002979.SZ",  # 雷赛智能
-    "603083.SH",  # 剑桥科技
+    # AI算力（服务器/IDC/散热/光模块/PCB/连接器/封测/UPS）
+    "603019.SH",  # 中科曙光
     "601138.SH",  # 工业富联
+    "603881.SH",  # 数据港
+    "002837.SZ",  # 英维克
+    "002156.SZ",  # 通富微电
     "600183.SH",  # 生益科技
     "002463.SZ",  # 沪电股份
+    "002916.SZ",  # 深南电路
     "002475.SZ",  # 立讯精密
-    "002460.SZ",  # 赣锋锂业
-    "002074.SZ",  # 国轩高科
-    "600580.SH",  # 卧龙电驱
-    "601136.SH",  # 首创证券
+    "002281.SZ",  # 光迅科技
+    "600487.SH",  # 亨通光电
+    "603986.SH",  # 兆易创新
+    "002518.SZ",  # 科士达 （UPS是不间断电源）
+    "002335.SZ",  # 科华数据
+
+    # 电网数字化/特高压
+    "603556.SH",  # 海兴电力
+    "601567.SH",  # 三星医疗
+    "600268.SH",  # 国电南自
+    "601877.SH",  # 正泰电器
+    "000400.SZ",  # 许继电气
+    "600312.SH",  # 平高电气
+    "600406.SH",  # 国电南瑞
     "601126.SH",  # 四方股份
+    "601179.SH",  # 中国西电
+    "603530.SH",  # 神马电力
+    "002270.SZ",  # 华明装备
+    "002028.SZ",  # 思源电气
+    "600089.SH",  # 特变电工
+    "600885.SH",  # 宏发股份
+
+    # 航天军工/低空经济/通信
+    "601698.SH",  # 中国卫通
+    "600118.SH",  # 中国卫星
+    "002389.SZ",  # 航天彩虹
+    "002111.SZ",  # 威海广泰
+
+    # 消费电子/渠道/ODM/结构件
+    "600745.SH",  # 闻泰科技
+    "002241.SZ",  # 歌尔股份
+    "605133.SH",  # 华勤技术
+    "002600.SZ",  # 领益智造
+    "002624.SZ",  # 完美世界
+
+    # 机器人/工控
+    "000559.SZ",  # 万向钱潮
     "002050.SZ",  # 三花智控
-    "002709.SZ",  # 天赐材料
-    "601899.SH",  # 紫金矿业
-    "002747.SZ",  # 埃斯顿
+    "601100.SH",  # 恒立液压
+    "002979.SZ",  # 雷赛智能
+    "603416.SH",  # 信捷电气
+    "603728.SH",  # 鸣志电器
+    "603283.SH",  # 赛腾股份
+    "600592.SH",  # 龙溪股份
+
+    # 有色/资源
+    "600111.SH",  # 北方稀土
+    "600366.SH",  # 宁波韵升
+    "600392.SH",  # 盛和资源
     "601600.SH",  # 中国铝业
     "000807.SZ",  # 云铝股份
     "002532.SZ",  # 天山铝业
-    "002156.SZ",  # 通富微电
-    "002407.SZ",  # 多氟多
-    "600111.SH",  # 北方稀土
-
-    # 追加的新股票（按你提供的名称顺序，已去重）
-    "600021.SH",  # 上海电力
-    "600403.SH",  # 大有能源
-    "603026.SH",  # 石大胜华
+    "000612.SZ",  # 焦作万方
+    "601899.SH",  # 紫金矿业
     "603993.SH",  # 洛阳钼业
-    "002759.SZ",  # 天际股份
+    "603799.SH",  # 华友钴业
     "600549.SH",  # 厦门钨业
+
+    # 锂电/材料
+    "002466.SZ",  # 天齐锂业
+    "002460.SZ",  # 赣锋锂业
+    "002074.SZ",  # 国轩高科
+    "002709.SZ",  # 天赐材料
+    "603026.SH",  # 石大胜华
+    "002759.SZ",  # 天际股份
+    "002407.SZ",  # 多氟多
+
+    # 智能电动车
+    "601689.SH",  # 拓普集团
+    "605255.SH",  # 天普股份
+
+    # 公用事业/风电/核电
+    "601985.SH",  # 中国核电
+    "003816.SZ",  # 中国广核
+    "600021.SH",  # 上海电力
+    "002202.SZ",  # 金风科技
+
+    # 金融/软件/环保
+    "601211.SH",  # 国泰海通
+    "601009.SH",  # 南京银行
+    "600797.SH",  # 浙大网新
+
+    # 半导体特气/化学品/医药
     "002549.SZ",  # 凯美特气
     "002409.SZ",  # 雅克科技
-    "603986.SH",  # 兆易创新
-    "600895.SH",  # 张江高科
+    "600867.SH",  # 通化东宝
+
+    # 新增
+    "600057.SH",  # 厦门象屿
+    "600593.SH",  # 大连圣亚
+    "000555.SZ",  # 神州信息
 ]
+
 # 你的股票列表
 LOOKBACK_N = 20
 USE_QFQ = True               # True=前复权，False=不复权
@@ -64,6 +133,7 @@ ATR_METHOD = "sma"           # 'sma' 或 'wilder'
 VOL_UNIT_DIVISOR = 1e4       # “万手” = 手 / 1e4
 TIMEOUT = 6
 BASE_DAY = "today"           # 新增：'today' 或 'yesterday'
+OUT_DIR = "E:\yxt\OneDrive\炒股数据\每日股票数据更新"  # Windows 输出目录（留空=当前目录），示例：r"D:\Stocks\Exports"
 
 # —— 结构位参数（前低/前高判断用）——
 PIVOT_K = 3                  # 波谷/波峰左右各K根确认（常用3~5）
@@ -249,13 +319,18 @@ def last_metrics(code_raw: str, name_map: dict, lookback: int=20, base_day: str=
     # 均线（基准日最新值）
     ma5  = close.rolling(5).mean().iloc[-1]
     ma10 = close.rolling(10).mean().iloc[-1]
-    ma20 = close.rolling(20).mean().iloc[-1]
+    ma20_s = close.rolling(20).mean()
+    ma20 = ma20_s.iloc[-1]
     ma60 = close.rolling(60).mean().iloc[-1]
+
+    # ——新增：前一日 MA20（相对“基准日”的前一根）与“MA20 向上?”——
+    ma20_prev = ma20_s.shift(1).iloc[-1] if len(ma20_s) >= 2 else np.nan
+    ma20_up = (ma20 > ma20_prev) if (pd.notna(ma20) and pd.notna(ma20_prev)) else ""  # True/False/空白
 
     # 前高（含基准日，取最近 LOOKBACK_N 的最高）
     p_res = high.iloc[-lookback:].max()
 
-    # 前低（结构位：在基准日前寻找“已确认波谷”）
+    # 前低（结构位）
     p_sup_val, p_sup_date, _ = find_pivot_low(
         hist_upto, k=PIVOT_K, max_lookback=STRUCT_LOOKBACK, exclude_last=EXCLUDE_LATEST
     )
@@ -275,7 +350,7 @@ def last_metrics(code_raw: str, name_map: dict, lookback: int=20, base_day: str=
         "代码": code6,
         "名称": name_map.get(code6, ""),
         "前高(P_res)": round(p_res, 3),
-        "前低(P_sup)": round(p_sup_val, 3),   # 结构位（波谷）
+        "前低(P_sup)": round(p_sup_val, 3),
         "MA5": round(ma5, 3),
         "MA10": round(ma10, 3),
         "MA20": round(ma20, 3),
@@ -284,12 +359,18 @@ def last_metrics(code_raw: str, name_map: dict, lookback: int=20, base_day: str=
         "ATR10": round(atr_n, 3),
         "VOL10(万)": round(vol10, 3),
         "VOL(万)": round(vol_last, 3),
-        # 如需调试可加： "基准日期": base_date, "结构位日期": p_sup_date
+        "MA20 向上?": ma20_up,   # <<< 新增字段
     }
+
 
 def parse_args():
     p = argparse.ArgumentParser(description="生成股票指标Excel（支持基准天数：today/yesterday）")
     p.add_argument("--base-day", choices=["today","yesterday"], default=BASE_DAY, help="基准天数（默认：today）")
+    p.add_argument(
+        "--out-dir",
+        default=OUT_DIR,
+        help="输出目录（Windows 路径建议用引号包裹；留空=当前目录）"
+    )
     return p.parse_args()
 
 def main():
@@ -307,9 +388,10 @@ def main():
         rows.append(last_metrics(code, name_map, LOOKBACK_N, base_day=base_day))
 
     out = pd.DataFrame(rows, columns=[
-        "代码","名称","前高(P_res)","前低(P_sup)",
-        "MA5","MA10","MA20","MA60",
-        "昨收(Close)","ATR10","VOL10(万)","VOL(万)"
+        "代码", "名称", "前高(P_res)", "前低(P_sup)",
+        "MA5", "MA10", "MA20", "MA60",
+        "昨收(Close)", "ATR10", "VOL10(万)", "VOL(万)",
+        "MA20 向上?"  # <<< 新增在最后
     ])
 
     # 关键：按原 CODES 顺序排序，避免被其他排序打乱
@@ -322,10 +404,14 @@ def main():
 
     suffix = "" if base_day == "today" else f"-{base_day}"
     fn = f"stock_metrics_{datetime.now().strftime('%Y%m%d')}{suffix}.xlsx"
-    out.to_excel(fn, index=False)
+    raw_out_dir = args.out_dir or ""
+    out_dir = Path(os.path.expandvars(raw_out_dir)).expanduser() if raw_out_dir.strip() else Path.cwd()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / fn
 
-    print(f"基准天数: {base_day} | 文件: {fn}")
-    print(out)
+    out.to_excel(out_path, index=False)
+
+    print(f"基准天数: {base_day} | 文件: {out_path.resolve()}")
 
 if __name__ == "__main__":
     main()
